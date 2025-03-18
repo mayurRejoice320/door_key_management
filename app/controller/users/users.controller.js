@@ -8,6 +8,9 @@ const QRCode = require("qrcode");
 const fs = require("fs");
 const path = require("path");
 const { ROLE } = require("../../utils/constant");
+const multer = require("multer");
+const AWSUpload = require('../../services/imgploads.js')
+var AWS = require('aws-sdk');
 
 // Add User
 exports.add = async (req, res) => {
@@ -25,10 +28,22 @@ exports.add = async (req, res) => {
       }
     }
 
+    const obj = new Users({
+      role_id: role_id,
+      full_name: full_name,
+      email: email,
+      phone_no: phone_no,
+      password: password,
+      profile_image: null, // ✅ Storing QR Code URL as profile image
+      project_id: project_id,
+    });
+    console.log(obj, '-------------obj')
+    //--------------------
     // Convert to string for code
     let stringdata = JSON.stringify({
       full_name: full_name,
       phone_no: phone_no,
+      user_id: obj._id
     });
 
     // Generate QR code properly
@@ -38,22 +53,94 @@ exports.add = async (req, res) => {
       version: 10,
     });
 
-    const obj = new Users({
-      role_id: role_id,
-      full_name: full_name,
-      email: email,
-      phone_no: phone_no,
-      password: password,
-      profile_image: storagePath,
-      project_id: project_id,
+    // Ensure QR Code file exists before reading
+    if (!fs.existsSync(storagePath)) {
+      throw new Error("QR Code generation failed, file not found.");
+    }
+
+    // Read the QR code file as a buffer
+    const qrBuffer = fs.readFileSync(storagePath);
+
+    // Upload QR Code to S3
+    let awsQrCodeUrl = await AWSUpload.uploadAWSImage({
+      file: {
+        buffer: qrBuffer,
+        originalname: `${phone_no}-qrcode.png`,
+        mimetype: "image/png",
+      }
     });
+    //--------------------
+    obj.profile_image = awsQrCodeUrl.image_url
+
 
     const data = await obj.save();
 
     return res.status(201).json({ success: "true", message: message.ADD_DATA("User"), data });
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     return res.status(500).json({ success: "false", message: error.message });
+  }
+};
+
+exports.addNEW = async (req, res) => {
+  try {
+    const { role_id, full_name, email, phone_no, password, profile_image, project_id } = req.body;
+
+    // Check if user already exists
+    const isExistingUser = await Users.findOne({ phone_no });
+    if (isExistingUser) {
+      return res.status(400).json({ success: false, message: "User already exists" });
+    }
+
+    // Check if project exists (Assuming "Project" model exists)
+    if (project_id) {
+      // const Project = require("../models/Project"); // Load project model
+      const projectExists = await Project.findById(project_id);
+      if (!projectExists) {
+        return res.status(400).json({ success: false, message: "Project not found" });
+      }
+    }
+
+    // Generate QR Code
+    const qrData = JSON.stringify({ full_name, phone_no });
+    const qrCodePath = path.join(__dirname, "..", "..", "uploads", "images", "agency", `${phone_no}-qrcode.png`);
+    await QRCode.toFile(qrCodePath, qrData, { errorCorrectionLevel: "L", version: 10 });
+
+    // Upload QR Code to S3
+    const awsQrCodeUrl = await AWSUpload.uploadAWSImage({ storagePath: qrCodePath });
+
+    // Upload profile image if provided
+    let awsProfileImgUrl = profile_image; // Default to provided URL (if any)
+    // if (req.file) {
+    awsProfileImgUrl = await AWSUpload.uploadAWSImage({ storagePath: req.file.path });
+    // }
+
+    console.log(awsProfileImgUrl, '------------------------------ awsProfileImgUrl')
+
+    // Hash Password (if needed)
+    // const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new user
+    const newUser = new Users({
+      role_id,
+      full_name,
+      email,
+      phone_no,
+      password: password,
+      profile_image: awsProfileImgUrl,
+      project_id,
+    });
+
+    const savedUser = await newUser.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "User added successfully",
+      data: savedUser,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

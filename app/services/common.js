@@ -1,3 +1,4 @@
+const multer = require("multer");
 // const db = require('../../app/models')
 
 // const methods = {
@@ -33,11 +34,46 @@
 
 // }
 
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+// AWS S3 Client Setup
+const s3 = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+  });
+  
 
 // module.exports = { methods }
 
+const imageStorage = multer.diskStorage({
+    // Destination to store image
+    destination: "uploads/images/product",
+    filename: (req, file, cb) => {
+        cb(
+            null,
+            file.fieldname + "_" + Date.now() + path.extname(file.originalname)
+        );
+        // file.fieldname is name of the field (image)
+        // path.extname get the uploaded file extension
+    },
+});
 
 const methods = {
+    imageUpload: multer({
+        storage: imageStorage,
+        limits: {
+            fileSize: 2000000, // 1000000 Bytes = 2 MB
+        },
+        fileFilter(req, file, cb, next) {
+            if (!file.originalname.match(/\.(png|jpg|jpeg)$/)) {
+                // upload only png and jpg format
+                return cb(new Error("Please upload a Image"));
+            }
+            cb(undefined, true);
+        },
+    }),
     create: async (model, data) => {
         return await model.create(data);
     },
