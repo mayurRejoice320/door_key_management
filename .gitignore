@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+debug.log
+error.log
+
+# AWS credentials (DO NOT COMMIT)
+.aws/
+.aws-credentials.json
+
+# S3 uploads (if storing locally)
+uploads/
+uploads/images/
+uploads/temp/
+
+# Build files
+dist/
+build/
+
+# Editor files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
