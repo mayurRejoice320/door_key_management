@@ -78,7 +78,7 @@ const uploadAWSImage = async ({ file }) => {
 
     const params = {
         Bucket: process.env.BUCKET,
-        Key: `uploads/${Date.now()}-${file.originalname}`, // Unique filename
+        Key: `images/${file.originalname}`, // Unique filename
         Body: file.buffer,
         ContentType: file.mimetype
     };

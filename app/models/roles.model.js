@@ -5,17 +5,14 @@ const roleSchema = mongoose.Schema(
   {
     role: {
       type: String,
-      enum: [ROLE.ADMIN, ROLE.AGENCY, ROLE.USER],
+      enum: [ROLE.ADMIN, ROLE.PROJECT, ROLE.AGENCY, ROLE.USER],
       trim: true,
     },
     is_active: {
       type: Boolean,
       default: true,
     },
-    deleted_at: {
-      type: Date,
-      default: null,
-    },
+    is_delete: { type: Boolean, default: false }, // deleted : 1, note delete: 0
   },
   { timestamps: true, versionKey: false }
 );

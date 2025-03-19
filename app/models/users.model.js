@@ -7,12 +7,12 @@ const userSchema = new mongoose.Schema(
     role_id: {
       type: mongoose.Types.ObjectId,
       ref: "roles",
-      default: ROLE.USER,
       required: true,
     },
     project_id: {
-      type: mongoose.Types.ObjectId,  // project owner id
+      type: mongoose.Types.ObjectId, // project owner id
       ref: "users",
+      default: null,
     },
     is_active: { type: Boolean, default: true, required: true },
     full_name: {

@@ -12,6 +12,7 @@ dotenv.config();
 const db = require("./app/models");
 
 require("./app/routes/users.routes")(app);
+require("./app/routes/admin.routes")(app);
 
 app.get("/", function (req, res) {
   res.send("Hello World");
@@ -38,3 +39,8 @@ var PORT = process.env.PORT || 8080;
 app.listen(PORT, async () => {
   console.log(`Server is running on port : ${PORT}`);
 });
+
+
+
+// all api velidation
+// set token login

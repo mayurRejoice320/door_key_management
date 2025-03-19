@@ -8,11 +8,21 @@ const doorKeySchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId, // project owner id
       ref: "users",
     },
-    key_name: {
-      type: String,
-      required: true,
-      trim: true,
-      default: null,
+    tower_id: {
+      type: mongoose.Types.ObjectId, // towers id
+      ref: "towers",
+    },
+    floor_id: {
+      type: mongoose.Types.ObjectId, // floors id
+      ref: "floors",
+    },
+    flat_id: {
+      type: mongoose.Types.ObjectId, // flats id
+      ref: "flats",
+    },
+    door_id: {
+      type: mongoose.Types.ObjectId, // doors id
+      ref: "doors",
     },
     key_number: {
       type: String,
